@@ -17,10 +17,10 @@ class ViewController: UIViewController {
 
     let collectionId = "6155742223662"
     
-    lazy var account = Account(client: client)
-    lazy var storage = Storage(client: client)
-    lazy var realtime = Realtime(client: client)
-    lazy var database = Database(client: client)
+    lazy var account = Account(client)
+    lazy var storage = Storage(client)
+    lazy var realtime = Realtime(client)
+    lazy var database = Database(client)
 
     var imagePicker: ImagePicker? = nil
     
@@ -37,8 +37,7 @@ class ViewController: UIViewController {
             
             switch result {
             case .failure(let error): string = error.message
-            case .success(var response):
-                string = response.body!.readString(length: response.body!.readableBytes) ?? ""
+            case .success(let session): string = session.id
             }
 
             DispatchQueue.main.async {
@@ -59,8 +58,7 @@ class ViewController: UIViewController {
             
             switch result {
             case .failure(let error): string = error.message
-            case .success(var response):
-                string = response.body!.readString(length: response.body!.readableBytes) ?? ""
+            case .success(let document): string = document.id
             }
 
             DispatchQueue.main.async {
@@ -75,7 +73,7 @@ class ViewController: UIViewController {
                 
                 switch result {
                 case .failure(let error): string = error.message
-                case .success(let response): string = response.description
+                case .success: string = "Success"
                 }
 
                 DispatchQueue.main.async {
@@ -90,7 +88,7 @@ class ViewController: UIViewController {
                 
                 switch result {
                 case .failure(let error): string = error.message
-                case .success(let response): string = response.description
+                case .success: string = "Success"
                 }
 
                 DispatchQueue.main.async {
@@ -105,7 +103,7 @@ class ViewController: UIViewController {
                 
                 switch result {
                 case .failure(let error): string = error.message
-                case .success(let response): string = response.description
+                case .success: string = "Success"
                 }
 
                 DispatchQueue.main.async {
@@ -125,12 +123,12 @@ class ViewController: UIViewController {
     }
     
     @IBAction func logout(_ sender: Any) {
-        account.deleteSession(sessionId: "") { result in
+        account.deleteSession(sessionId: "current") { result in
             var string: String = ""
             
             switch result {
             case .failure(let error): string = error.message
-            case .success(let response): string = String(describing: response.body!)
+            case .success: string = "Success"
             }
 
             DispatchQueue.main.async {
@@ -151,10 +149,8 @@ extension ViewController: ImagePickerDelegate {
         
         storage.createFile(file: file) { result in
             switch result {
-            case .failure(let error):
-                output = error.message
-            case .success(var response):
-                output = response.body!.readString(length: response.body!.readableBytes) ?? ""
+            case .failure(let error): output = error.message
+            case .success(let file): output = file.id
             }
             
             DispatchQueue.main.async {
