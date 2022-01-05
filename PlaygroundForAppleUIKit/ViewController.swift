@@ -50,6 +50,7 @@ class ViewController: UIViewController {
     @IBAction func createDocument(_ sender: Any) {
         database.createDocument(
             collectionId: collectionId,
+            documentId: "unique()",
             data: [
                 "name": "Name \(Int.random(in: 0...Int.max))",
                 "description": "Description \(Int.random(in: 0...Int.max))"
@@ -149,7 +150,7 @@ extension ViewController: ImagePickerDelegate {
         
         let file = File(name: "my_image.jpg", buffer: buffer)
         
-        storage.createFile(file: file) { result in
+        storage.createFile(fileId: "unique()", file: file) { result in
             switch result {
             case .failure(let error):
                 output = error.message
