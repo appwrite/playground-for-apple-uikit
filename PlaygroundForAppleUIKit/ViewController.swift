@@ -17,10 +17,10 @@ class ViewController: UIViewController {
 
     let collectionId = "6155742223662"
     
-    lazy var account = Account(client: client)
-    lazy var storage = Storage(client: client)
-    lazy var realtime = Realtime(client: client)
-    lazy var database = Database(client: client)
+    lazy var account = Account(client)
+    lazy var storage = Storage(client)
+    lazy var realtime = Realtime(client)
+    lazy var database = Database(client)
 
     var imagePicker: ImagePicker? = nil
     
@@ -37,8 +37,8 @@ class ViewController: UIViewController {
             
             switch result {
             case .failure(let error): string = error.message
-            case .success(var response):
-                string = response.body!.readString(length: response.body!.readableBytes) ?? ""
+            case .success(let response):
+                string = String(describing: response.toMap())
             }
 
             DispatchQueue.main.async {
@@ -50,6 +50,7 @@ class ViewController: UIViewController {
     @IBAction func createDocument(_ sender: Any) {
         database.createDocument(
             collectionId: collectionId,
+            documentId: "unique()",
             data: [
                 "name": "Name \(Int.random(in: 0...Int.max))",
                 "description": "Description \(Int.random(in: 0...Int.max))"
@@ -59,8 +60,8 @@ class ViewController: UIViewController {
             
             switch result {
             case .failure(let error): string = error.message
-            case .success(var response):
-                string = response.body!.readString(length: response.body!.readableBytes) ?? ""
+            case .success(let response):
+                string = String(describing: response.toMap())
             }
 
             DispatchQueue.main.async {
@@ -130,7 +131,7 @@ class ViewController: UIViewController {
             
             switch result {
             case .failure(let error): string = error.message
-            case .success(let response): string = String(describing: response.body!)
+            case .success(_): string = "session deleted"
             }
 
             DispatchQueue.main.async {
@@ -149,12 +150,12 @@ extension ViewController: ImagePickerDelegate {
         
         let file = File(name: "my_image.jpg", buffer: buffer)
         
-        storage.createFile(file: file) { result in
+        storage.createFile(fileId: "unique()", file: file) { result in
             switch result {
             case .failure(let error):
                 output = error.message
-            case .success(var response):
-                output = response.body!.readString(length: response.body!.readableBytes) ?? ""
+            case .success(let response):
+                output = String(describing: response.toMap())
             }
             
             DispatchQueue.main.async {

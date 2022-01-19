@@ -14,9 +14,9 @@
         "package": "Appwrite",
         "repositoryURL": "https://github.com/appwrite/sdk-for-apple",
         "state": {
-          "branch": "dev",
-          "revision": "8d2befa1e076b62fd2941bb5faba06ce55c9eaef",
-          "version": null
+          "branch": null,
+          "revision": "8585aadb031d546b2a7069c5ac44b6223c33f575",
+          "version": "0.2.0"
         }
       },
       {
