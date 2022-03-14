@@ -8,7 +8,7 @@ This is Appwrite Apple integration. For Swift server side integration please loo
 
 ## Get Started
 
-The **PlaygroundForApple** folder in this repository contains **all** the playground examples and source code.
+The **PlaygroundForAppleUIKit** folder in this repository contains **all** the playground examples and source code.
 
 You can learn how to to integrate your Appwrite Apple SDK in your project and see how different features of the SDK can be used.
 
