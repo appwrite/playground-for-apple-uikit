@@ -16,6 +16,7 @@ class ViewController: UIViewController {
         .setProject("playground-for-uikit")
         .setSelfSigned()
 
+    var databaseId = "default"
     var collectionId = "test"
     var functionId = "test"
     var bucketId = "test"
@@ -31,7 +32,7 @@ class ViewController: UIViewController {
     lazy var account = Account(client)
     lazy var storage = Storage(client)
     lazy var realtime = Realtime(client)
-    lazy var database = Database(client)
+    lazy var databases = Databases(client, databaseId)
     lazy var functions = Functions(client)
 
     var imagePicker: ImagePicker? = nil
@@ -46,110 +47,96 @@ class ViewController: UIViewController {
     @IBAction func createAccount() {
         userEmail = "\(Int.random(in: 1..<Int.max))@example.com"
         
-        account.create(
-            userId: "unique()",
-            email: userEmail,
-            password: "password"
-        ) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let err):
-                    self.dialogText = err.message
-                case .success(let user):
-                    self.userId = user.id
-                    self.dialogText = String(describing: user.toMap())
-                    self.getAccount()
-                }
-                self.showDialog()
+        Task {
+            do {
+                let user = try await account.create(
+                    userId: "unique()",
+                     email: userEmail, 
+                     password: "password"
+                )
+                userId = user.id
+                dialogText = String(describing: user.toMap())
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
         }
     }
     
     @IBAction func getAccount() {
-        account.get { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let err):
-                    self.dialogText = err.message
-                case .success(let user):
-                    self.dialogText = String(describing: user.toMap())
-                }
-                self.showDialog()
+        Task {
+            do {
+                let user = try await account.get()
+                dialogText = String(describing: user.toMap())
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
         }
     }
     
     @IBAction func createSession() {
-        account.createSession(
-            email: userEmail,
-            password: "password"
-        ) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let err):
-                    self.dialogText = err.message
-                case .success(let session):
-                    self.dialogText = String(describing: session.toMap())
-                    self.getAccount()
-                }
-                self.showDialog()
+        Task {
+            do {
+                let session = try await account.createEmailSession(
+                    email: userEmail, 
+                    password: "password"
+                )
+                dialogText = String(describing: session.toMap())
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
+            getAccount()
         }
     }
     
     @IBAction func createAnonymousSession() {
-        account.createAnonymousSession() { result in
-            switch result {
-            case .failure(let err):
-                DispatchQueue.main.async {
-                    self.dialogText = err.message
-                    self.showDialog()
-                }
-            case .success:
-                self.getAccount()
+        Task {
+            do {
+                let session = try await account.createAnonymousSession()
+                dialogText = String(describing: session.toMap())
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
+            getAccount()
         }
     }
     
     @IBAction func listSessions() {
-        account.getSessions { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let err):
-                    self.dialogText = err.message
-                case .success(let sessions):
-                    self.dialogText = String(describing: sessions.toMap())
-                }
-                self.showDialog()
+        Task {
+            do {
+                let sessions = try await account.getSessions()
+                dialogText = String(describing: sessions.toMap())
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
         }
     }
     
     @IBAction func deleteSessions() {
-        account.deleteSessions { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let err):
-                    self.dialogText = err.message
-                case .success:
-                    self.dialogText = "Sessions Deleted."
-                }
-                self.showDialog()
+        Task {
+            do {
+                _ = try await account.deleteSessions()
+                dialogText = "Sessions Deleted."
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
         }
     }
     
     @IBAction func deleteSession() {
-        account.deleteSession(sessionId: "current") { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let err):
-                    self.dialogText = err.message
-                case .success:
-                    self.dialogText = "Session Deleted."
-                }
-                self.showDialog()
+        Task {
+            do {
+                _ = try await account.deleteSession(sessionId: "current")
+                dialogText = "Session Deleted."
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
         }
     }
     
@@ -162,53 +149,49 @@ class ViewController: UIViewController {
     }
     
     @IBAction func createDoc() {
-        database.createDocument(
-            collectionId: collectionId,
-            documentId: "unique()",
-            data: ["username": "user 1"],
-            read: ["role:all"]
-        ) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let err):
-                    self.dialogText = err.message
-                case .success(let doc):
-                    self.documentId = doc.id
-                    self.dialogText = String(describing: doc.toMap())
-                }
-                self.showDialog()
+        Task {
+            do {
+                let document = try await databases.createDocument(
+                    collectionId: collectionId,
+                    documentId: "unique()",
+                    data: ["username": "user 1"],
+                    read: ["role:all"]
+                )
+                documentId = document.id
+                dialogText = String(describing: document.toMap())
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
         }
     }
     
     @IBAction func listDocs() {
-        database.listDocuments(collectionId: collectionId) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let err):
-                    self.dialogText = err.message
-                case .success(let docs):
-                    self.dialogText = String(describing: docs.toMap())
-                }
-                self.showDialog()
+        Task {
+            do {
+                let documents = try await databases.listDocuments(
+                    collectionId: collectionId
+                )
+                dialogText = String(describing: documents.toMap())
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
         }
     }
     
     @IBAction func deleteDoc() {
-        database.deleteDocument(
-            collectionId: collectionId,
-            documentId: documentId
-        ) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let err):
-                    self.dialogText = err.message
-                case .success:
-                    self.dialogText = "Document Deleted."
-                }
-                self.showDialog()
+        Task {
+            do {
+                _ = try await databases.deleteDocument(
+                    collectionId: collectionId,
+                    documentId: documentId
+                )
+                dialogText = "Document Deleted."
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
         }
     }
    
@@ -235,131 +218,125 @@ class ViewController: UIViewController {
     }
    
     func uploadFile(image: UIImage) {
-        let imageBuffer = ByteBufferAllocator()
-            .buffer(data: image.jpegData(compressionQuality: 1)!)
-        
-        storage.createFile(
-            bucketId: bucketId,
-            fileId: "unique()",
-            file: File(name: "file.png", buffer: imageBuffer),
-            onProgress: nil
-        ) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let err):
-                    self.dialogText = err.message
-                case .success(let file):
-                    self.fileId = file.id
-                    self.dialogText = String(describing: file.toMap())
-                }
-                self.showDialog()
+        let file = InputFile.fromData(
+            image.jpegData(compressionQuality: 1)!,
+            filename: "file.png",
+            mimeType: "image/png"
+        )
+
+        Task {
+            do {
+                let file = try await storage.createFile(
+                    bucketId: bucketId,
+                    fileId: "unique()",
+                    file: file,
+                    onProgress: nil
+                )
+                fileId = file.id
+                dialogText = String(describing: file.toMap())
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
         }
     }
     
     @IBAction func listFiles() {
-        storage.listFiles(bucketId: bucketId) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let err):
-                    self.dialogText = err.message
-                case .success(let files):
-                    self.dialogText = String(describing: files.toMap())
-                }
-                self.showDialog()
+        Task {
+            do {
+                let files = try await storage.listFiles(
+                    bucketId: bucketId
+                )
+                dialogText = String(describing: files.toMap())
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
         }
     }
     
     @IBAction func deleteFile() {
-        storage.deleteFile(
-            bucketId: bucketId,
-            fileId: fileId
-        ) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let err):
-                    self.dialogText = err.message
-                case .success:
-                    self.dialogText = "File Deleted."
-                }
-                self.showDialog()
+        Task {
+            do {
+                _ = try await storage.deleteFile(
+                    bucketId: bucketId,
+                    fileId: fileId
+                )
+                dialogText = "File Deleted."
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
         }
     }
     
     @IBAction func createExecution() {
-        functions.createExecution(functionId: functionId) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let err):
-                    self.dialogText = err.message
-                case .success(let execution):
-                    self.executionId = execution.id
-                    self.dialogText = String(describing: execution.toMap())
-                }
-                self.showDialog()
+        Task {
+            do {
+                let execution = try await functions.createExecution(
+                    functionId: functionId
+                )
+                executionId = execution.id
+                dialogText = String(describing: execution.toMap())
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
         }
     }
     
     @IBAction func listExecutions() {
-        functions.listExecutions(functionId: functionId) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let err):
-                    self.dialogText = err.message
-                case .success(let executions):
-                    self.dialogText = String(describing: executions.toMap())
-                }
-                self.showDialog()
+        Task {
+            do {
+                let executions = try await functions.listExecutions(
+                    functionId: functionId
+                )
+                dialogText = String(describing: executions.toMap())
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
         }
     }
     
     @IBAction func getExecution() {
-        functions.getExecution(
-            functionId: functionId,
-            executionId: executionId
-        ) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let err):
-                    self.dialogText = err.message
-                case .success(let execution):
-                    self.dialogText = String(describing: execution.toMap())
-                }
-                self.showDialog()
+        Task {
+            do {
+                let execution = try await functions.getExecution(
+                    functionId: functionId,
+                    executionId: executionId
+                )
+                dialogText = String(describing: execution.toMap())
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
         }
     }
     
     @IBAction func generateJWT() {
-        account.createJWT() { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let err):
-                    self.dialogText = err.message
-                case .success(let jwt):
-                    self.dialogText = String(describing: jwt.toMap())
-                }
-                self.showDialog()
+        Task {
+            do {
+                let jwt = try await account.createJWT()
+                dialogText = String(describing: jwt.toMap())
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
         }
     }
     
     @IBAction func socialLogin(provider: String) {
-        account.createOAuth2Session(provider: provider) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let err):
-                    self.dialogText = err.message
-                case .success:
-                    self.getAccount()
-                    self.dialogText = "OAuth Success!"
-                }
-                self.showDialog()
+        Task {
+            do {
+                _ = try await account.createOAuth2Session(
+                    provider: provider
+                )
+                dialogText = "OAuth Success!"
+            } catch {
+                dialogText = error.localizedDescription
             }
+            showDialog()
         }
     }
     
@@ -381,26 +358,7 @@ class ViewController: UIViewController {
 
 extension ViewController: ImagePickerDelegate {
     func didSelect(image: UIImage?) {
-        let buffer = ByteBufferAllocator()
-            .buffer(data: image!.jpegData(compressionQuality: 1)!)
-        
-        let file = File(name: "my_image.jpg", buffer: buffer)
-        
-        storage.createFile(
-            bucketId: bucketId,
-            fileId: "unique()",
-            file: file,
-            onProgress: nil
-        ) { result in
-            switch result {
-            case .failure(let error):
-                self.dialogText = error.message
-            case .success(let file):
-                self.fileId = file.id
-                self.dialogText = String(describing: file.toMap())
-            }
-            self.showDialog()
-        }
+        uploadFile(image: image!)
     }
 }
 
