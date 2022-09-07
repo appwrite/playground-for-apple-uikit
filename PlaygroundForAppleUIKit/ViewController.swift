@@ -16,7 +16,7 @@ class ViewController: UIViewController {
         .setProject("playground-for-uikit")
         .setSelfSigned()
 
-    var databaseId = "default"
+    var databaseId = "test"
     var collectionId = "test"
     var functionId = "test"
     var bucketId = "test"
@@ -32,12 +32,13 @@ class ViewController: UIViewController {
     lazy var account = Account(client)
     lazy var storage = Storage(client)
     lazy var realtime = Realtime(client)
-    lazy var databases = Databases(client, databaseId)
+    lazy var databases = Databases(client)
     lazy var functions = Functions(client)
 
     var imagePicker: ImagePicker? = nil
     
     @IBOutlet weak var responseText: UITextView!
+    @IBOutlet weak var downloadedImage: UIImageView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -141,9 +142,10 @@ class ViewController: UIViewController {
     }
     
     @IBAction func subscribe() {
-        _ = realtime.subscribe(channels: ["collections.\(collectionId).documents"]) { event in
+        _ = realtime.subscribe(channels: ["databases.\(databaseId).collections.\(collectionId).documents"]) { event in
             DispatchQueue.main.async {
                 self.dialogText = String(describing: event.payload!)
+                self.showDialog()
             }
         }
     }
@@ -152,10 +154,15 @@ class ViewController: UIViewController {
         Task {
             do {
                 let document = try await databases.createDocument(
+                    databaseId: databaseId,
                     collectionId: collectionId,
                     documentId: "unique()",
                     data: ["username": "user 1"],
-                    read: ["role:all"]
+                    permissions: [
+                        Permission.read(Role.users()),
+                        Permission.update(Role.users()),
+                        Permission.delete(Role.users()),
+                    ]
                 )
                 documentId = document.id
                 dialogText = String(describing: document.toMap())
@@ -170,6 +177,7 @@ class ViewController: UIViewController {
         Task {
             do {
                 let documents = try await databases.listDocuments(
+                    databaseId: databaseId,
                     collectionId: collectionId
                 )
                 dialogText = String(describing: documents.toMap())
@@ -184,6 +192,7 @@ class ViewController: UIViewController {
         Task {
             do {
                 _ = try await databases.deleteDocument(
+                    databaseId: databaseId,
                     collectionId: collectionId,
                     documentId: documentId
                 )
@@ -230,7 +239,11 @@ class ViewController: UIViewController {
                     bucketId: bucketId,
                     fileId: "unique()",
                     file: file,
-                    onProgress: nil
+                    permissions: [
+                        Permission.read(Role.users()),
+                        Permission.update(Role.users()),
+                        Permission.delete(Role.users()),
+                    ]
                 )
                 fileId = file.id
                 dialogText = String(describing: file.toMap())
