@@ -51,9 +51,9 @@ class ViewController: UIViewController {
         Task {
             do {
                 let user = try await account.create(
-                    userId: "unique()",
-                     email: userEmail, 
-                     password: "password"
+                    userId: ID.unique(),
+                    email: userEmail,
+                    password: "password"
                 )
                 userId = user.id
                 dialogText = String(describing: user.toMap())
@@ -156,7 +156,7 @@ class ViewController: UIViewController {
                 let document = try await databases.createDocument(
                     databaseId: databaseId,
                     collectionId: collectionId,
-                    documentId: "unique()",
+                    documentId: ID.unique(),
                     data: ["username": "user 1"],
                     permissions: [
                         Permission.read(Role.users()),
@@ -237,7 +237,7 @@ class ViewController: UIViewController {
             do {
                 let file = try await storage.createFile(
                     bucketId: bucketId,
-                    fileId: "unique()",
+                    fileId: ID.unique(),
                     file: file,
                     permissions: [
                         Permission.read(Role.users()),
