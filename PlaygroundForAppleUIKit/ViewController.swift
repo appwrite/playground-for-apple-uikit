@@ -12,14 +12,14 @@ import UIKit
 class ViewController: UIViewController {
 
     let client = Client()
-        .setEndpoint("http://localhost/v1")
-        .setProject("playground-for-uikit")
+        .setEndpoint("YOUR_ENDPOINT")
+        .setProject("YOUR_PROJECT_ID")
         .setSelfSigned()
 
-    var databaseId = "test"
-    var collectionId = "test"
-    var functionId = "test"
-    var bucketId = "test"
+    var databaseId = "YOUR_DATABASE_ID"
+    var collectionId = "YOUR_COLLECTION_ID"
+    var functionId = "YOUR_FUNCTION_ID"
+    var bucketId = "YOUR_BUCKET_ID"
     var documentId = ""
     var fileId = ""
     var executionId = ""
@@ -108,7 +108,7 @@ class ViewController: UIViewController {
     @IBAction func listSessions() {
         Task {
             do {
-                let sessions = try await account.getSessions()
+                let sessions = try await account.listSessions()
                 dialogText = String(describing: sessions.toMap())
             } catch {
                 dialogText = error.localizedDescription
@@ -157,7 +157,7 @@ class ViewController: UIViewController {
                     databaseId: databaseId,
                     collectionId: collectionId,
                     documentId: ID.unique(),
-                    data: ["username": "user 1"],
+                    data: ["username": "Apple UIKit"],
                     permissions: [
                         Permission.read(Role.users()),
                         Permission.update(Role.users()),
@@ -178,7 +178,10 @@ class ViewController: UIViewController {
             do {
                 let documents = try await databases.listDocuments(
                     databaseId: databaseId,
-                    collectionId: collectionId
+                    collectionId: collectionId,
+                    queries: [
+                        Query.equal("username", value: "Apple UIKit")
+                    ]
                 )
                 dialogText = String(describing: documents.toMap())
             } catch {
