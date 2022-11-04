@@ -12,14 +12,14 @@ import UIKit
 class ViewController: UIViewController {
 
     let client = Client()
-        .setEndpoint("http://localhost/v1")
-        .setProject("playground-for-uikit")
+        .setEndpoint("YOUR_ENDPOINT")
+        .setProject("YOUR_PROJECT_ID")
         .setSelfSigned()
 
-    var databaseId = "default"
-    var collectionId = "test"
-    var functionId = "test"
-    var bucketId = "test"
+    var databaseId = "YOUR_DATABASE_ID"
+    var collectionId = "YOUR_COLLECTION_ID"
+    var functionId = "YOUR_FUNCTION_ID"
+    var bucketId = "YOUR_BUCKET_ID"
     var documentId = ""
     var fileId = ""
     var executionId = ""
@@ -32,12 +32,13 @@ class ViewController: UIViewController {
     lazy var account = Account(client)
     lazy var storage = Storage(client)
     lazy var realtime = Realtime(client)
-    lazy var databases = Databases(client, databaseId)
+    lazy var databases = Databases(client)
     lazy var functions = Functions(client)
 
     var imagePicker: ImagePicker? = nil
     
     @IBOutlet weak var responseText: UITextView!
+    @IBOutlet weak var downloadedImage: UIImageView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -50,9 +51,9 @@ class ViewController: UIViewController {
         Task {
             do {
                 let user = try await account.create(
-                    userId: "unique()",
-                     email: userEmail, 
-                     password: "password"
+                    userId: ID.unique(),
+                    email: userEmail,
+                    password: "password"
                 )
                 userId = user.id
                 dialogText = String(describing: user.toMap())
@@ -107,7 +108,7 @@ class ViewController: UIViewController {
     @IBAction func listSessions() {
         Task {
             do {
-                let sessions = try await account.getSessions()
+                let sessions = try await account.listSessions()
                 dialogText = String(describing: sessions.toMap())
             } catch {
                 dialogText = error.localizedDescription
@@ -141,9 +142,10 @@ class ViewController: UIViewController {
     }
     
     @IBAction func subscribe() {
-        _ = realtime.subscribe(channels: ["collections.\(collectionId).documents"]) { event in
+        _ = realtime.subscribe(channels: ["databases.\(databaseId).collections.\(collectionId).documents"]) { event in
             DispatchQueue.main.async {
                 self.dialogText = String(describing: event.payload!)
+                self.showDialog()
             }
         }
     }
@@ -152,10 +154,15 @@ class ViewController: UIViewController {
         Task {
             do {
                 let document = try await databases.createDocument(
+                    databaseId: databaseId,
                     collectionId: collectionId,
-                    documentId: "unique()",
-                    data: ["username": "user 1"],
-                    read: ["role:all"]
+                    documentId: ID.unique(),
+                    data: ["username": "Apple UIKit"],
+                    permissions: [
+                        Permission.read(Role.users()),
+                        Permission.update(Role.users()),
+                        Permission.delete(Role.users()),
+                    ]
                 )
                 documentId = document.id
                 dialogText = String(describing: document.toMap())
@@ -170,7 +177,11 @@ class ViewController: UIViewController {
         Task {
             do {
                 let documents = try await databases.listDocuments(
-                    collectionId: collectionId
+                    databaseId: databaseId,
+                    collectionId: collectionId,
+                    queries: [
+                        Query.equal("username", value: "Apple UIKit")
+                    ]
                 )
                 dialogText = String(describing: documents.toMap())
             } catch {
@@ -184,6 +195,7 @@ class ViewController: UIViewController {
         Task {
             do {
                 _ = try await databases.deleteDocument(
+                    databaseId: databaseId,
                     collectionId: collectionId,
                     documentId: documentId
                 )
@@ -228,9 +240,13 @@ class ViewController: UIViewController {
             do {
                 let file = try await storage.createFile(
                     bucketId: bucketId,
-                    fileId: "unique()",
+                    fileId: ID.unique(),
                     file: file,
-                    onProgress: nil
+                    permissions: [
+                        Permission.read(Role.users()),
+                        Permission.update(Role.users()),
+                        Permission.delete(Role.users()),
+                    ]
                 )
                 fileId = file.id
                 dialogText = String(describing: file.toMap())
