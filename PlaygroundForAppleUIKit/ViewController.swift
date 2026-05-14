@@ -207,23 +207,23 @@ class ViewController: UIViewController {
         }
     }
    
-//    @IBAction func preview() {
-//        storage.getFilePreview(
-//            bucketId: bucketId,
-//            fileId: fileId,
-//            width: 300
-//        ) { result in
-//            DispatchQueue.main.async {
-//                switch result {
-//                case .failure(let error):
-//                    self.dialogText = error.message
-//                    self.showDialog()
-//                case .success(let response):
-//                    self.downloadedImage = UIImage(data: Data(buffer: response))
-//                }
-//            }
-//        }
-//    }
+    @IBAction func preview() {
+        Task {
+            do {
+                let data = try await storage.getFilePreview(
+                    bucketId: bucketId,
+                    fileId: fileId,
+                    width: 300
+                )
+                
+                DispatchQueue.main.async {
+                    self.downloadedImage.image = UIImage(data: Data(buffer: data))
+                }
+            } catch {
+                dialogText = error.localizedDescription
+            }
+        }
+    }
     
     @IBAction func upload() {
         imagePicker!.present()
